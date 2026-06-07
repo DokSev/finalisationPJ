@@ -23,7 +23,7 @@
       margin:0;
       padding:0;
       box-sizing:border-box;
-      font-family:'Inter',sans-serif;
+      font-family:'Times New Roman', Times,serif;
     }
 
     body{
@@ -190,7 +190,6 @@
       margin-top:35px;
       margin-bottom:12px;
       font-size:15px;
-      font-style:italic;
       color:#555;
     }
 
@@ -467,32 +466,13 @@
     <h1>SYSTÉM OVERENIA DOKUMENTOV</h1>
 
     <p class="paragraph">
-      Tento priestor slúži na bezpečný prístup k súkromným dokumentom
-      a administratívnym súborom priradeným konkrétnemu používateľovi.
-    </p>
+    Vitajte v tomto zabezpečenom priestore určenom na konzultáciu a overovanie vašich administratívnych dokumentov. Táto nezávislá platforma bola navrhnutá tak, aby uľahčila prístup k vašim osobným súborom digitálnym a dôverným spôsobom.
 
-    <p class="paragraph">
-      Prístup do systému je možný iba po úspešnom overení údajov
-      zadaných počas registračného procesu.
-    </p>
+Táto služba slúži ako súkromný podporný nástroj, ktorého jediným cieľom je umožniť riadne registrovaným používateľom bezpečne si prezerať dokumenty, ktoré im boli pridelené. Ochrana vášho súkromia zostáva našou najvyššou prioritou; každý súbor je prísne prepojený s e-mailovou adresou poskytnutou počas vytvárania vášho účtu. Informácie obsiahnuté v tomto priestore sú preto prístupné iba držiteľom platných prístupových kódov a nie sú verejne dostupné.
 
-    <p class="paragraph">
-      Každý dokument je digitálne prepojený s registrovanou e-mailovou adresou
-      používateľa a nie je verejne dostupný.
-    </p>
-
-    <p class="paragraph">
-      Systém automaticky monitoruje neplatné pokusy,
-      nesprávne kódy a nadmerné požiadavky.
-    </p>
-
-    <p class="paragraph">
-      Pred pokračovaním sa uistite,
-      že používate správnu e-mailovú adresu.
-    </p>
-
+Aby sme zaručili integritu vašich údajov, upozorňujeme vás, že prístup do systému je podmienený presným zadaním prihlasovacích údajov, ktoré vám boli odoslané pri registrácii. Systém zabezpečuje nepretržité monitorovanie proti akémukoľvek pokusu o neoprávnený prístup, zadaniu chybných kódov alebo neobvyklému množstvu požiadaviek, aby sa udržala vysoká úroveň bezpečnosti pre všetkých našich používateľov. Pred potvrdením žiadosti o prístup vás prosíme o dôkladnú kontrolu zadaných prihlasovacích údajov.
     <div class="bottom-link" onclick="showScreen('screen2')">
-      pokračovať do systému
+      Pokračovať do systému
     </div>
 
   </div>
@@ -524,7 +504,7 @@
     </ul>
 
     <button class="system-btn" onclick="showScreen('screen3')">
-      vstúpiť do systému
+      Vstúpiť do systému
     </button>
 
   </div>
@@ -545,11 +525,11 @@
     <div class="dual-buttons">
 
       <button class="access-btn" onclick="openNoCode()">
-        nemám svoj kód
+        Nemám svoj kód
       </button>
 
       <button class="access-btn" onclick="openHaveCode()">
-        už mám svoj kód
+        Už mám svoj kód
       </button>
 
     </div>
@@ -574,7 +554,7 @@
       />
 
       <button class="system-btn" onclick="sendCode()">
-        odoslať kód
+        Odoslať kód
       </button>
 
       <div class="message" id="sendMessage"></div>
@@ -632,7 +612,7 @@
       />
 
       <button class="system-btn" onclick="verifyExistingCode()">
-        spustiť overenie
+        Spustiť overenie
       </button>
 
       <div class="message" id="existingMessage"></div>
@@ -911,16 +891,31 @@
     }
 
     // BLOCK DEFINITIVE
-    if(data.code_requests >= 4){
+    if(data.requests_blocked){
 
-      message.className = "message error";
+  message.className = "message error";
 
-      message.innerText =
-        "Táto e-mailová adresa bola zablokovaná. Kontaktujte administrátora.";
+  message.innerText =
+    "Táto e-mailová adresa bola natrvalo zablokovaná. Kontaktujte administrátora systému.";
 
-      return;
-    }
+  return;
+}
+if((data.code_requests || 0) >= 3){
 
+  await supabaseClient
+    .from("dossiers_docs")
+    .update({
+      requests_blocked:true
+    })
+    .eq("email", email);
+
+  message.className = "message error";
+
+  message.innerText =
+    "Táto e-mailová adresa bola natrvalo zablokovaná. Kontaktujte administrátora systému.";
+
+  return;
+}
     currentEmail = email;
 
     // NEW CODE
@@ -1150,6 +1145,17 @@
 
         return;
       }
+
+      await supabaseClient
+  .from("dossiers_docs")
+  .update({
+    wrong_attempts:0,
+    blocked_until:null
+  })
+  .eq("email", email);
+
+data.wrong_attempts = 0;
+data.blocked_until = null;
     }
 
     // WRONG CODE
@@ -1429,32 +1435,15 @@
     location.reload();
   }
 
-  // =========================
-  // PROTECTION
-  // =========================
-
-  document.addEventListener(
-    "contextmenu",
-    e=>e.preventDefault()
-  );
-
-  document.addEventListener(
-    "keydown",
-    e=>{
-
-      if(
-        (e.ctrlKey && e.shiftKey &&
-          ["I","J","C"].includes(e.key))
-        ||
-        (e.ctrlKey &&
-          ["U","S"].includes(e.key))
-      ){
-        e.preventDefault();
-      }
-
-    }
-  );
-
+    // Bloc de protection renforcé
+    document.oncontextmenu = function() { return false; }; // Clic droit
+    
+    document.onkeydown = function(e) {
+        // Bloquer F12 (123), Ctrl+U (85), Ctrl+S (83), Ctrl+I (73), Ctrl+J (74)
+        if(e.keyCode == 123 || e.ctrlKey && (e.keyCode == 85 || e.keyCode == 83 || e.keyCode == 73 || e.keyCode == 74)) {
+            return false;
+        }
+    };
 </script>
 
 </body>
