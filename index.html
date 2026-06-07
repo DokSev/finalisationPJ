@@ -98,20 +98,26 @@
     }
 
     .bottom-link{
-      position:absolute;
-      bottom:45px;
-      left:50%;
-      transform:translateX(-50%);
-      font-size:17px;
-      cursor:pointer;
-      color:#444;
-      transition:.3s;
-      text-decoration:none;
-    }
+  position:absolute;
+  bottom:45px;
+  left:50%;
+  transform:translateX(-50%);
+  font-size:17px;
+  cursor:pointer;
+  color:#111;
+  transition:.3s;
+  text-decoration:none;
+  padding:12px 24px;
+  background:#f1f1f1;
+  border-radius:14px;
+  font-weight:500;
+  box-shadow:0 4px 14px rgba(0,0,0,.08);
+}
 
     .bottom-link:hover{
-      color:#000;
-    }
+  background:#e7e7e7;
+  transform:translateX(-50%) translateY(-2px);
+}
 
     .bottom-left-back{
       position:fixed;
@@ -1062,9 +1068,13 @@ if((data.code_requests || 0) >= 3){
         })
         .eq("email", currentEmail);
 
-      alert(
-        `Neplatný kód. Zostávajúce pokusy: ${3-attempts}`
-      );
+    const message =
+  document.getElementById("sendMessage");
+
+message.className = "message error";
+
+message.innerText =
+  `Neplatný kód. Zostávajúce pokusy: ${3-attempts}`;
 
       return;
     }
@@ -1207,8 +1217,9 @@ data.blocked_until = null;
     await supabaseClient
       .from("dossiers_docs")
       .update({
-        wrong_attempts:0
-      })
+  wrong_attempts:0,
+  last_access:new Date().toISOString()
+})
       .eq("email", email);
 
     await launchTechnicalSequence();
@@ -1230,12 +1241,18 @@ data.blocked_until = null;
 
     const progress =
       document.getElementById("progressFill");
-
+progress.style.transition = "";
+progress.style.width = "0%";
     const success =
       document.getElementById("successScreen");
 
     box.style.display = "block";
+progress.style.transition = "18s linear";
+progress.style.width = "0%";
 
+setTimeout(()=>{
+  progress.style.width = "100%";
+},50);
     const steps = [
 
       "Inicializácia bezpečnostného protokolu...",
@@ -1266,9 +1283,6 @@ data.blocked_until = null;
     for(let i=0;i<steps.length;i++){
 
       text.innerText = steps[i];
-
-      progress.style.width =
-        `${(i+1)*(100/steps.length)}%`;
 
       await delay(3000);
     }
