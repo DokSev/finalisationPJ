@@ -1086,12 +1086,12 @@ message.innerText =
 
     // RESET
     await supabaseClient
-      .from("dossiers_docs")
-      .update({
-        wrong_attempts:0
-      })
-      .eq("email", currentEmail);
-
+  .from("dossiers_docs")
+  .update({
+    wrong_attempts:0,
+    last_access:new Date().toISOString()
+  })
+  .eq("email", currentEmail);
     await launchTechnicalSequence();
 
     openDocument(data.pdf_link);
